@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>护苗 · 未成年人保护法智能助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f5f7fb 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 20, 60, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 20px;
+        }
+
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .logo {
+            font-size: 28px;
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* 对话区域 */
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fc;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 消息气泡 */
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #e3eaf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .bubble {
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+            position: relative;
+        }
+
+        .message.user .bubble {
+            background: #1a73e8;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.assistant .bubble {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        /* 参考资料卡片 */
+        .references {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #5a6d80;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+        .references strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .ref-item {
+            margin-bottom: 4px;
+            opacity: 0.8;
+            display: flex;
+            gap: 6px;
+        }
+
+        /* 输入区域 */
+        .input-area {
+            padding: 18px 20px;
+            background: white;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-area input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: #1a73e8;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            background: #1557b0;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #a0c4f1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 状态指示 */
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #94a3b8;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .typing-bubble {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 12px 18px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* 滚动条美化 */
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">🛡</div>
+            <div>
+                <h1>护苗法律助手</h1>
+                <p>基于未成年人保护法 RAG 智能咨询</p>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <!-- 初始提示 -->
+            <div style="text-align: center; color: #94a3b8; margin-top: 40px;">
+                <div style="font-size: 40px;">⚖️</div>
+                <p style="margin-top: 12px;">你好，我是“护苗”法律助手</p>
+                <p>可以问我关于校园欺凌、强制报告、网络安全等问题</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="输入你的法律问题..." autocomplete="off" />
+            <button class="send-btn" id="sendBtn" title="发送">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const chatArea = document.getElementById('chatArea');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const API_URL = 'http://127.0.0.1:8000/chat';
+
+        let isWaiting = false;
+
+        // 添加消息到聊天区
+        function addMessage(role, content, references = []) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            // 头像
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = role === 'user' ? '👤' : '⚖️';
+
+            // 气泡
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.innerHTML = content.replace(/\n/g, '<br>');
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+
+            // 参考资料（仅助手）
+            if (role === 'assistant' && references.length > 0) {
+                const refDiv = document.createElement('div');
+                refDiv.className = 'references';
+                refDiv.innerHTML = '<strong> 参考来源</strong>' + references.map(r =>
+                    `<div class="ref-item">📄 ${r.source}: ${r.snippet}</div>`
+                ).join('');
+                bubble.appendChild(refDiv);
+            }
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // 显示“正在思考...”动画
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="avatar">⚖️</div>
+                <div class="typing-bubble">
+                    思考中 <span class="loading-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+                </div>
+            `;
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        // 发送请求
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query || isWaiting) return;
+
+            isWaiting = true;
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            // 清除初始提示
+            if (document.querySelector('.chat-area > div:first-child')) {
+                const init = document.querySelector('.chat-area > div:first-child');
+                if (init.style.textAlign === 'center') init.remove();
+            }
+
+            addMessage('user', query);
+            userInput.value = '';
+            showTyping();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: query, is_minor: false })
+                });
+
+                if (!response.ok) throw new Error(`服务器错误: ${response.status}`);
+
+                const data = await response.json();
+                removeTyping();
+                addMessage('assistant', data.answer, data.references || []);
+            } catch (error) {
+                removeTyping();
+                addMessage('assistant', `❌ 请求失败：${error.message}\n请确保后端服务已启动（python main.py）`);
+            } finally {
+                isWaiting = false;
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        userInput.focus();
+    </script>
+</body>
+</html>
