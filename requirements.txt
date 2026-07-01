@@ -1,0 +1,11 @@
+ollama
+chromadb
+sentence-transformers
+fastapi
+uvicorn
+pydantic
+langchain
+langchain-community
+pypdf
+jieba
+rank-bm25
